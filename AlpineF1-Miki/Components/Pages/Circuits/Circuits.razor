@@ -1,0 +1,70 @@
+﻿@page "/circuits"
+@using System.Text.Json;
+
+<h3>Circuits</h3>
+
+@if (circuits.Count() < 1)
+{
+    <p>
+        No crcuits found
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Track name</th>
+                <th>Track location</th>
+                <th>Date added</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var circuit in circuits)
+            {
+                <tr>
+                    <td>@circuit.track_name</td>
+                    <td>@circuit.track_location</td>
+                    <td>@circuit.date_added</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    public class AplineCircuits
+    {
+        public int id { get; set; }
+        public string? track_name { get; set; }
+        public string? track_location { get; set; }
+        public string? date_added { get; set; }
+    }
+
+    string API_URL = "http://localhost:5021/";
+
+    private IEnumerable<AplineCircuits>? circuits = Array.Empty<AplineCircuits>();
+
+    private async Task refreshList()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetCircuits");
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        httpClient.Dispose();
+
+        using (var responseStream = await response.Content.ReadAsStreamAsync())
+        {
+            circuits = JsonSerializer.Deserialize<IEnumerable<AplineCircuits>>(responseStream);
+        }
+
+        Console.WriteLine("Response: " + response);
+        Console.WriteLine("******************************");
+    }
+
+    protected override async Task OnInitializedAsync() 
+    { 
+        await this.refreshList();
+    }
+}

@@ -1,0 +1,70 @@
+﻿@page "/tyres"
+@using System.Text.Json;
+
+<h3>Circuits</h3>
+
+@if (tyres.Count() < 1)
+{
+    <p>
+        No Tyre data found
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Family</th>
+                <th>Type</th>
+                <th>Placement</th>
+                <th>Degredation coefficient</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tyre in tyres)
+            {
+                <tr id="@tyre.id">
+                    <td>@tyre.name</td>
+                    <td>@tyre.family</td>
+                    <td>@tyre.type</td>
+                    <td>@tyre.placement</td>
+                    <td>@tyre.degradationCoefficient</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="/tyres/edit?id=@tyre.id&name=@tyre.name&family=@tyre.family&type=@tyre.type&placement=@tyre.placement&deg=@tyre.degradationCoefficient">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    string API_URL = "http://localhost:5021/";
+
+    private IEnumerable<AlpineTyre>? tyres = Array.Empty<AlpineTyre>();
+
+    private async Task refreshList()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetAllTyres");
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        httpClient.Dispose();
+
+        using (var responseStream = await response.Content.ReadAsStreamAsync())
+        {
+            tyres = JsonSerializer.Deserialize<IEnumerable<AlpineTyre>>(responseStream);
+        }
+
+        Console.WriteLine("Response: " + response);
+        Console.WriteLine("******************************");
+    }
+
+    protected override async Task OnInitializedAsync() 
+    { 
+        await this.refreshList();
+    }
+}

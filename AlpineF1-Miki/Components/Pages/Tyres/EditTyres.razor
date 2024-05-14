@@ -1,0 +1,124 @@
+﻿@page "/tyres/edit"
+@using AlpineF1_Miki.Components.Layout
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Alpine Tyre Form</h3>
+
+<EditForm Model="@alpineTyre" OnValidSubmit="@HandleValidSubmit" FormName="tyre-update-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <InputText id="name" @bind-Value="@alpineTyre.name" class="form-control" />
+        <ValidationMessage For="@(() => alpineTyre.name)" />
+    </div>
+
+    <div class="form-group">
+        <label for="family">Family:</label>
+        <InputText id="family" @bind-Value="@alpineTyre.family" class="form-control" />
+        <ValidationMessage For="@(() => alpineTyre.family)" />
+    </div>
+
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <InputText id="type" @bind-Value="@alpineTyre.type" class="form-control" />
+        <ValidationMessage For="@(() => alpineTyre.type)" />
+    </div>
+
+    <div class="form-group">
+        <label for="placement">Placement:</label>
+        <InputText id="placement" @bind-Value="@alpineTyre.placement" class="form-control" />
+        <ValidationMessage For="@(() => alpineTyre.placement)" />
+    </div>
+
+    <div class="form-group">
+        <label for="degradationCoefficient">Degradation Coefficient:</label>
+        <InputText id="degradationCoefficient" @bind-Value="@alpineTyre.degradationCoefficient" class="form-control" />
+        <ValidationMessage For="@(() => alpineTyre.degradationCoefficient)" />
+    </div>
+
+</EditForm>
+
+<button class="btn btn-primary" @onclick="HandleValidSubmit">Submit</button>
+
+
+<Popup @ref="popup">
+  <Title>This is a <em>Title!</em></Title>
+  <Body>
+      <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Omnes enim iucundum motum, quo sensus hilaretur.
+          <i>Quis istud possit, inquit, negare?</i>
+          <mark>Ego vero isti, inquam, permitto.</mark> Duo Reges: constructio interrete.
+      </p>
+      <FetchData />
+      <dl>
+          <dt><dfn>Stoici scilicet.</dfn></dt>
+          <dd>An hoc usque quaque, aliter in vita?</dd>
+          <dt><dfn>Erat enim Polemonis.</dfn></dt>
+          <dd>Quod cum accidisset ut alter alterum necopinato videremus, surrexit statim.</dd>
+      </dl>
+  </Body>
+  <Footer>
+      <button type="button" class="btn btn-primary">Save changes</button>
+      <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="() => popup.Close()">Close</button>
+  </Footer>
+</Popup>
+
+@code {
+    string API_URL = "http://localhost:5021/";
+    private AlpineTyre alpineTyre = new AlpineTyre();
+    private Popup popup = new Popup();
+    private bool showPopup = false;
+
+    protected override void OnInitialized()
+    {
+        // Retrieve query string parameters
+        var queryString = NavigationManager.Uri.Split('?');
+        if (queryString.Length > 1)
+        {
+            var queryParams = System.Web.HttpUtility.ParseQueryString(queryString[1]);
+
+            if (int.TryParse(queryParams["id"], out int id))
+            {
+                alpineTyre.id = id;
+            }
+
+            alpineTyre.name = queryParams["name"];
+            alpineTyre.family = queryParams["family"];
+            alpineTyre.type = queryParams["type"];
+            alpineTyre.placement = queryParams["placement"];
+            alpineTyre.degradationCoefficient = queryParams["deg"];
+        }
+    }
+
+    private async void HandleValidSubmit()
+    {
+        // Handle form submission logic here
+        System.Diagnostics.Debug.WriteLine($"Submitted: Name: {alpineTyre.name}, Family: {alpineTyre.family}, Type: {alpineTyre.type}, Placement: {alpineTyre.placement}, Degradation Coefficient: {alpineTyre.degradationCoefficient}");
+
+        HttpClient httpClient = new HttpClient();
+
+        var formContent = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("id", alpineTyre.id.ToString()),
+            new KeyValuePair<string, string>("name", alpineTyre.name),
+            new KeyValuePair<string, string>("family", alpineTyre.family),
+            new KeyValuePair<string, string>("type", alpineTyre.type),
+            new KeyValuePair<string, string>("placement", alpineTyre.placement),
+            new KeyValuePair<string, string>("degradationCoefficient", alpineTyre.degradationCoefficient),
+        });
+
+        HttpResponseMessage response = await httpClient.PostAsync(API_URL + "api/AplineF1Miki/UpdateTyreDetails", formContent);
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        popup.Open();
+
+        // Reload UI
+        StateHasChanged();
+
+        httpClient.Dispose();
+    }
+}

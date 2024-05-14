@@ -1,6 +1,11 @@
 using AlpineF1_Miki.Components;
 using Microsoft.Extensions.Options;
 
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,6 +19,11 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.Expiration = TimeSpan.Zero;
 
 });
+
+builder.Services
+    .AddBlazorise()
+    .AddBootstrapProviders()
+    .AddFontAwesomeIcons();
 
 var app = builder.Build();
 

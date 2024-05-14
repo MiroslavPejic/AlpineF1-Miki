@@ -3,7 +3,8 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<h3>Alpine Tyre Form</h3>
+<h3>Change tyre details</h3>
+<hr/>
 
 <EditForm Model="@alpineTyre" OnValidSubmit="@HandleValidSubmit" FormName="tyre-update-form">
     <DataAnnotationsValidator />
@@ -11,25 +12,25 @@
 
     <div class="form-group">
         <label for="name">Name:</label>
-        <InputText id="name" @bind-Value="@alpineTyre.name" class="form-control" />
+        <InputText id="name" @bind-Value="@alpineTyre.name" class="form-control" disabled/>
         <ValidationMessage For="@(() => alpineTyre.name)" />
     </div>
 
     <div class="form-group">
         <label for="family">Family:</label>
-        <InputText id="family" @bind-Value="@alpineTyre.family" class="form-control" />
+        <InputText id="family" @bind-Value="@alpineTyre.family" class="form-control" disabled />
         <ValidationMessage For="@(() => alpineTyre.family)" />
     </div>
 
     <div class="form-group">
         <label for="type">Type:</label>
-        <InputText id="type" @bind-Value="@alpineTyre.type" class="form-control" />
+        <InputText id="type" @bind-Value="@alpineTyre.type" class="form-control" disabled />
         <ValidationMessage For="@(() => alpineTyre.type)" />
     </div>
 
     <div class="form-group">
         <label for="placement">Placement:</label>
-        <InputText id="placement" @bind-Value="@alpineTyre.placement" class="form-control" />
+        <InputText id="placement" @bind-Value="@alpineTyre.placement" class="form-control" disabled />
         <ValidationMessage For="@(() => alpineTyre.placement)" />
     </div>
 
@@ -41,28 +42,19 @@
 
 </EditForm>
 
+<hr/>
 <button class="btn btn-primary" @onclick="HandleValidSubmit">Submit</button>
 
 
 <Popup @ref="popup">
-  <Title>This is a <em>Title!</em></Title>
+  <Title><em>@popupTitle</em></Title>
   <Body>
       <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Omnes enim iucundum motum, quo sensus hilaretur.
-          <i>Quis istud possit, inquit, negare?</i>
-          <mark>Ego vero isti, inquam, permitto.</mark> Duo Reges: constructio interrete.
+          @popupBody
       </p>
-      <FetchData />
-      <dl>
-          <dt><dfn>Stoici scilicet.</dfn></dt>
-          <dd>An hoc usque quaque, aliter in vita?</dd>
-          <dt><dfn>Erat enim Polemonis.</dfn></dt>
-          <dd>Quod cum accidisset ut alter alterum necopinato videremus, surrexit statim.</dd>
-      </dl>
   </Body>
   <Footer>
-      <button type="button" class="btn btn-primary">Save changes</button>
-      <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="() => popup.Close()">Close</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => popup.Close()">Close</button>
   </Footer>
 </Popup>
 
@@ -71,6 +63,9 @@
     private AlpineTyre alpineTyre = new AlpineTyre();
     private Popup popup = new Popup();
     private bool showPopup = false;
+
+    private string popupTitle = "Success!";
+    private string popupBody = "";
 
     protected override void OnInitialized()
     {
@@ -113,6 +108,17 @@
         HttpResponseMessage response = await httpClient.PostAsync(API_URL + "api/AplineF1Miki/UpdateTyreDetails", formContent);
 
         System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        if (response.IsSuccessStatusCode)
+        {
+            popupTitle = "Success!";
+            popupBody = "Changes have been made to tyre with id: " + alpineTyre.id;
+        } 
+        else
+        {
+            popupTitle = "Failed!";
+            popupBody = "Failed to make changes to tyre with id: " + alpineTyre.id;
+        }
 
         popup.Open();
 

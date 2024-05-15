@@ -34,13 +34,16 @@
 
     private string modalDisplay = "none;";
     private string modalClass = "";
+    private string navigateBackTo = "";
     private bool showBackdrop = false;
 
-    public void Open()
+    public void Open(string navigateTo)
     {
         modalDisplay = "block;";
         modalClass = "show";
         showBackdrop = true;
+
+        navigateBackTo = navigateTo;
     }
 
     public void Close()
@@ -50,6 +53,6 @@
         showBackdrop = false;
 
         // Redirect to a page when the modal is closed
-        NavigationManager.NavigateTo("/tyres");
+        NavigationManager.NavigateTo(navigateBackTo);
     }
 }

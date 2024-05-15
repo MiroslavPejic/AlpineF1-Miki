@@ -9,4 +9,11 @@
         public string? placement { get; set; }
         public string? degradationCoefficient { get; set; }
     }
+
+    public class AlpineTyreDegradation
+    {
+        public int id { get; set; }
+        public string? type { get; set; }
+        public string? degradationCoefficient { get; set; }
+    }
 }

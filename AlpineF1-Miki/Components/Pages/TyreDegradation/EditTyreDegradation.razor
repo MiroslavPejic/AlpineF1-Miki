@@ -1,4 +1,4 @@
-﻿@page "/tyres/edit"
+﻿@page "/tyre-degradation/edit"
 @using AlpineF1_Miki.Components.Layout
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
@@ -11,27 +11,9 @@
     <ValidationSummary />
 
     <div class="form-group">
-        <label for="name">Name:</label>
-        <InputText id="name" @bind-Value="@alpineTyre.name" class="form-control" disabled/>
-        <ValidationMessage For="@(() => alpineTyre.name)" />
-    </div>
-
-    <div class="form-group">
-        <label for="family">Family:</label>
-        <InputText id="family" @bind-Value="@alpineTyre.family" class="form-control" disabled />
-        <ValidationMessage For="@(() => alpineTyre.family)" />
-    </div>
-
-    <div class="form-group">
         <label for="type">Type:</label>
         <InputText id="type" @bind-Value="@alpineTyre.type" class="form-control" disabled />
         <ValidationMessage For="@(() => alpineTyre.type)" />
-    </div>
-
-    <div class="form-group">
-        <label for="placement">Placement:</label>
-        <InputText id="placement" @bind-Value="@alpineTyre.placement" class="form-control" disabled />
-        <ValidationMessage For="@(() => alpineTyre.placement)" />
     </div>
 
     <div class="form-group">
@@ -60,7 +42,7 @@
 
 @code {
     string API_URL = "http://localhost:5021/";
-    private AlpineTyre alpineTyre = new AlpineTyre();
+    private AlpineTyreDegradation alpineTyre = new AlpineTyreDegradation();
     private Popup popup = new Popup();
     private bool showPopup = false;
 
@@ -80,10 +62,7 @@
                 alpineTyre.id = id;
             }
 
-            alpineTyre.name = queryParams["name"];
-            alpineTyre.family = queryParams["family"];
             alpineTyre.type = queryParams["type"];
-            alpineTyre.placement = queryParams["placement"];
             alpineTyre.degradationCoefficient = queryParams["deg"];
         }
     }
@@ -91,21 +70,18 @@
     private async void HandleValidSubmit()
     {
         // Handle form submission logic here
-        System.Diagnostics.Debug.WriteLine($"Submitted: Name: {alpineTyre.name}, Family: {alpineTyre.family}, Type: {alpineTyre.type}, Placement: {alpineTyre.placement}, Degradation Coefficient: {alpineTyre.degradationCoefficient}");
+        System.Diagnostics.Debug.WriteLine($"Submitted: Type: {alpineTyre.type}, Degradation Coefficient: {alpineTyre.degradationCoefficient}");
 
         HttpClient httpClient = new HttpClient();
 
         var formContent = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("id", alpineTyre.id.ToString()),
-            new KeyValuePair<string, string>("name", alpineTyre.name),
-            new KeyValuePair<string, string>("family", alpineTyre.family),
             new KeyValuePair<string, string>("type", alpineTyre.type),
-            new KeyValuePair<string, string>("placement", alpineTyre.placement),
-            new KeyValuePair<string, string>("degradationCoefficient", alpineTyre.degradationCoefficient),
+            new KeyValuePair<string, string>("degradationCoefficient", alpineTyre.degradationCoefficient.ToString()),
         });
 
-        HttpResponseMessage response = await httpClient.PostAsync(API_URL + "api/AplineF1Miki/UpdateTyreDetails", formContent);
+        HttpResponseMessage response = await httpClient.PostAsync(API_URL + "api/AplineF1Miki/UpdateTyreDegradationCoefficient", formContent);
 
         System.Diagnostics.Debug.WriteLine("API response: " + response);
 
@@ -120,7 +96,7 @@
             popupBody = "Failed to make changes to tyre with id: " + alpineTyre.id;
         }
 
-        popup.Open("/tyres");
+        popup.Open("/tyre-degradation");
 
         // Reload UI
         StateHasChanged();

@@ -17,6 +17,7 @@ else
                 <th>Track name</th>
                 <th>Track location</th>
                 <th>Date added</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -26,6 +27,9 @@ else
                     <td>@circuit.track_name</td>
                     <td>@circuit.track_location</td>
                     <td>@circuit.date_added</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="/circuits/view-circuit-points?id=@circuit.id&trackName=@circuit.track_name&trackLocation=@circuit.track_location&dateAdded=@circuit.date_added">View circuit points</a>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -33,14 +37,6 @@ else
 }
 
 @code {
-    public class AplineCircuits
-    {
-        public int id { get; set; }
-        public string? track_name { get; set; }
-        public string? track_location { get; set; }
-        public string? date_added { get; set; }
-    }
-
     string API_URL = "http://localhost:5021/";
 
     private IEnumerable<AplineCircuits>? circuits = Array.Empty<AplineCircuits>();
@@ -51,6 +47,9 @@ else
         HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetCircuits");
 
         System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        System.Diagnostics.Debug.WriteLine("JSON response: " + jsonResponse);
 
         httpClient.Dispose();
 

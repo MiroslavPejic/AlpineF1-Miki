@@ -1,5 +1,7 @@
 ﻿@page "/tyre-degradation/edit"
 @using AlpineF1_Miki.Components.Layout
+@using System.Text.Json;
+
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
@@ -49,7 +51,7 @@
     private string popupTitle = "Success!";
     private string popupBody = "";
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
         // Retrieve query string parameters
         var queryString = NavigationManager.Uri.Split('?');

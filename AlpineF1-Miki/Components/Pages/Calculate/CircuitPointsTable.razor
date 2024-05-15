@@ -1,0 +1,20 @@
+﻿@code {
+    [Parameter]
+    public List<string> DisplayedCircuitPoints { get; set; }
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Point</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var point in DisplayedCircuitPoints)
+        {
+            <tr>
+                <td>@point</td>
+            </tr>
+        }
+    </tbody>
+</table>

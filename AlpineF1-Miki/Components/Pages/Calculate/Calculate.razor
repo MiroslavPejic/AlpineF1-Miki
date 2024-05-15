@@ -1,39 +1,34 @@
-﻿@page "/circuits/view-circuit-points"
+﻿@page "/calculator"
 @using System.Text.Json;
-@using System.Net.Http;
-@using System.Collections.Generic;
-@using System.Threading.Tasks;
 
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<h3>Circuit Details</h3>
+<PageTitle>Alpine F1 - Circuit tyre degradation claculator</PageTitle>
 
-@if (isLoading)
+<h1>Alpine F1 - Circuit tyre degradation calculator</h1>
+
+<p>Use the following below to work out the tyre degradation values!</p>
+
+<h3>Select a circuit</h3>
+<hr/>
+
+@if (circuits != null && circuits.Any())
 {
-    <p>Loading...</p>
+    <select @bind="selectedCircuit">
+        @foreach (var circuit in circuits)
+        {
+            <option value="@circuit.id">@circuit.track_name</option>
+        }
+    </select>
 }
-else
+
+<br/>
+<button @onclick="OnCircuitSelectedButtonClick">Get Circuit Points</button>
+<hr/>
+
+@if (dataLoaded)
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Track name</th>
-                <th>Track location</th>
-                <th>Date added</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@alpineCircuit.track_name</td>
-                <td>@alpineCircuit.track_location</td>
-                <td>@alpineCircuit.date_added</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <hr />
-
     <h3>Circuit points</h3>
 
     <table class="table">
@@ -47,31 +42,58 @@ else
         </thead>
         <tbody>
             <tr>
-            @foreach (var point in displayedCircuitPoints)
-            {
-                <td>@point</td>
-            }
+                @foreach (var point in displayedCircuitPoints)
+                {
+                    <td>@point</td>
+                }
             </tr>
         </tbody>
     </table>
 
-        <button @onclick="PreviousPage">Previous</button>
-        <button @onclick="NextPage">Next</button>
+    <button @onclick="PreviousPage">Previous</button>
+    <button @onclick="NextPage">Next</button>
 }
 
 @code {
     string API_URL = "http://localhost:5021/";
 
-    private AplineCircuits alpineCircuit = new AplineCircuits();
+
+    private IEnumerable<AplineCircuits>? circuits = Array.Empty<AplineCircuits>();
     private AplineCircuitPoints circuitPoints;
     private List<string> allCircuitPoints = new List<string>();
     private List<string> displayedCircuitPoints = new List<string>();
-    private bool isLoading = true;
-    private bool dataLoaded = false;
     private int pageSize = 10;
     private int totalPages;
     private int currentPage = 1;
-    private string[] tableHeaders;
+    private int selectedCircuit;
+    private bool dataLoaded = false;
+    private bool isLoading = true;
+
+    private async Task initPage()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetCircuits");
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        System.Diagnostics.Debug.WriteLine("JSON response: " + jsonResponse);
+
+        httpClient.Dispose();
+
+        using (var responseStream = await response.Content.ReadAsStreamAsync())
+        {
+            circuits = JsonSerializer.Deserialize<IEnumerable<AplineCircuits>>(responseStream);
+        }
+
+        Console.WriteLine("Response: " + response);
+        Console.WriteLine("******************************");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.initPage();
+    }
 
     private async Task<AplineCircuitPoints> getCircuitPoints()
     {
@@ -82,7 +104,7 @@ else
 
         var formContent = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("id", alpineCircuit.id.ToString()),
+            new KeyValuePair<string, string>("id", selectedCircuit.ToString()),
         });
 
         HttpResponseMessage response = await httpClient.PostAsync(API_URL + "api/AplineF1Miki/GetCircuitPoints", formContent);
@@ -99,6 +121,19 @@ else
                 points = JsonSerializer.Deserialize<IEnumerable<AplineCircuitPoints>>(jsonResponse);
                 circuitPoints = points.FirstOrDefault();
                 System.Diagnostics.Debug.WriteLine("Deserialized circuit points: " + JsonSerializer.Serialize(circuitPoints));
+
+                // Your existing code for initialization
+                if (circuitPoints != null && !string.IsNullOrWhiteSpace(circuitPoints.circuit_points))
+                {
+                    allCircuitPoints = circuitPoints.circuit_points.Split(',').ToList();
+                    totalPages = (int)Math.Ceiling((double)allCircuitPoints.Count / pageSize);
+                    currentPage = 1;
+                    UpdateDisplayedCircuitPoints();
+                    dataLoaded = true; // Set the flag to indicate that data has been loaded
+
+                    // Update the UI for the circuit points table only
+                    StateHasChanged();
+                }
             }
             catch (Exception ex)
             {
@@ -117,8 +152,6 @@ else
     {
         if (!dataLoaded)
         {
-            circuitPoints = await getCircuitPoints();
-
             if (circuitPoints != null && !string.IsNullOrWhiteSpace(circuitPoints.circuit_points))
             {
                 allCircuitPoints = circuitPoints.circuit_points.Split(',').ToList();
@@ -130,43 +163,13 @@ else
 
         var startIndex = (page - 1) * pageSize;
         displayedCircuitPoints = allCircuitPoints.Skip(startIndex).Take(pageSize).ToList();
+
         currentPage = page;
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task OnCircuitSelectedButtonClick()
     {
-        if (!dataLoaded)
-        {
-            // Retrieve query string parameters
-            var queryString = NavigationManager.Uri.Split('?');
-            if (queryString.Length > 1)
-            {
-                var queryParams = System.Web.HttpUtility.ParseQueryString(queryString[1]);
-
-                if (int.TryParse(queryParams["id"], out int id))
-                {
-                    alpineCircuit.id = id;
-                }
-
-                alpineCircuit.track_name = queryParams["trackName"];
-                alpineCircuit.track_location = queryParams["trackLocation"];
-                alpineCircuit.date_added = queryParams["dateAdded"];
-            }
-
-            await LoadPage(1);
-            dataLoaded = true;
-            isLoading = false;
-        }
-
-        // Your existing code for initialization
-        if (circuitPoints != null && !string.IsNullOrWhiteSpace(circuitPoints.circuit_points))
-        {
-            allCircuitPoints = circuitPoints.circuit_points.Split(',').ToList();
-            totalPages = (int)Math.Ceiling((double)allCircuitPoints.Count / pageSize);
-            currentPage = 1;
-            UpdateDisplayedCircuitPoints();
-            isLoading = false;
-        }
+        await getCircuitPoints();
     }
 
     private void UpdateDisplayedCircuitPoints()
@@ -177,7 +180,6 @@ else
 
     private async Task PreviousPage()
     {
-
         if (currentPage > 1)
         {
             currentPage -= 1;

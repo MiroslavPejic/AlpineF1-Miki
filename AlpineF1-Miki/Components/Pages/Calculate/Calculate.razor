@@ -52,6 +52,29 @@
 
     <button @onclick="PreviousPage">Previous</button>
     <button @onclick="NextPage">Next</button>
+
+    <hr />
+
+    <h3>Weather Information</h3>
+    <button @onclick="OnLoadWeatherInformationClicked">Click to load weather information</button>
+
+    @if (weatherDataLoaded)
+    {
+        @if (weatherData != null)
+        {
+            <h3>Location: @weatherData.location.name, @weatherData.location.region, @weatherData.location.country</h3>
+            <p><strong>Last Updated:</strong> @weatherData.current.last_updated</p>
+            <p><strong>Temperature:</strong> @weatherData.current.temp_c°C</p>
+            <p><strong>Condition:</strong> @weatherData.current.condition.text</p>
+            <p><strong>Wind:</strong> @weatherData.current.wind_kph km/h, @weatherData.current.wind_dir</p>
+            <p><strong>Humidity:</strong> @weatherData.current.humidity%</p>
+            <p><strong>Visibility:</strong> @weatherData.current.vis_km km</p>
+        }
+        else
+        {
+            <p>No weather data available.</p>
+        }
+    }
 }
 
 @code {
@@ -60,6 +83,7 @@
 
     private IEnumerable<AplineCircuits>? circuits = Array.Empty<AplineCircuits>();
     private AplineCircuitPoints circuitPoints;
+    private WeatherData weatherData;
     private List<string> allCircuitPoints = new List<string>();
     private List<string> displayedCircuitPoints = new List<string>();
     private int pageSize = 10;
@@ -67,6 +91,7 @@
     private int currentPage = 1;
     private int selectedCircuit;
     private bool dataLoaded = false;
+    private bool weatherDataLoaded = false;
     private bool isLoading = true;
 
     private async Task initPage()
@@ -148,6 +173,28 @@
         return circuitPoints;
     }
 
+    private async Task<WeatherData> getWeatherData()
+    {
+        WeatherData data = new WeatherData();
+
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync("http://api.weatherapi.com/v1/current.json?key=97ae47bde535426ab75153443241505&q=Monaco&aqi=no");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine("JSON response: " + jsonResponse);
+
+            data = JsonSerializer.Deserialize<WeatherData>(jsonResponse);
+
+            weatherDataLoaded = true;
+        }
+
+        StateHasChanged();
+
+        return data;
+    }
+
     private async Task LoadPage(int page)
     {
         if (!dataLoaded)
@@ -170,6 +217,11 @@
     private async Task OnCircuitSelectedButtonClick()
     {
         await getCircuitPoints();
+    }
+
+    private async Task OnLoadWeatherInformationClicked()
+    {
+        weatherData = await getWeatherData();
     }
 
     private void UpdateDisplayedCircuitPoints()

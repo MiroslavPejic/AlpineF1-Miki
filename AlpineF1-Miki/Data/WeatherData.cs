@@ -2,53 +2,53 @@
 {
     public class WeatherData
     {
-        public Location Location { get; set; }
-        public CurrentCondition Current { get; set; }
+        public location location { get; set; }
+        public current current { get; set; }
     }
 
-    public class Location
+    public class location
     {
-        public string Name { get; set; }
-        public string Region { get; set; }
-        public string Country { get; set; }
-        public double Lat { get; set; }
-        public double Lon { get; set; }
-        public string TimeZoneId { get; set; }
-        public long LocalTimeEpoch { get; set; }
-        public DateTime LocalTime { get; set; }
+        public string name { get; set; }
+        public string region { get; set; }
+        public string country { get; set; }
+        public double lat { get; set; }
+        public double lon { get; set; }
+        public string tz_id { get; set; }
+        public long localtime_epoch { get; set; }
+        public string localtime { get; set; }
     }
 
-    public class CurrentCondition
+    public class current
     {
-        public long LastUpdatedEpoch { get; set; }
-        public DateTime LastUpdated { get; set; }
-        public double TempC { get; set; }
-        public double TempF { get; set; }
-        public int IsDay { get; set; }
-        public Condition Condition { get; set; }
-        public double WindMph { get; set; }
-        public double WindKph { get; set; }
-        public int WindDegree { get; set; }
-        public string WindDirection { get; set; }
-        public double PressureMb { get; set; }
-        public double PressureIn { get; set; }
-        public double PrecipMm { get; set; }
-        public double PrecipIn { get; set; }
-        public int Humidity { get; set; }
-        public int Cloud { get; set; }
-        public double FeelsLikeC { get; set; }
-        public double FeelsLikeF { get; set; }
-        public double VisibilityKm { get; set; }
-        public double VisibilityMiles { get; set; }
-        public double UV { get; set; }
-        public double GustMph { get; set; }
-        public double GustKph { get; set; }
+        public long last_updated_epoch { get; set; }
+        public string last_updated { get; set; }
+        public double temp_c { get; set; }
+        public double temp_f { get; set; }
+        public int is_day { get; set; }
+        public condition condition { get; set; }
+        public double wind_mph { get; set; }
+        public double wind_kph { get; set; }
+        public int wind_degree { get; set; }
+        public string wind_dir { get; set; }
+        public double pressure_mb { get; set; }
+        public double pressure_in { get; set; }
+        public double precip_mm { get; set; }
+        public double precip_in { get; set; }
+        public int humidity { get; set; }
+        public int cloud { get; set; }
+        public double feelslike_c { get; set; }
+        public double feelslike_f { get; set; }
+        public double vis_km { get; set; }
+        public double vis_miles { get; set; }
+        public double uv { get; set; }
+        public double gust_mph { get; set; }
+        public double gust_kph { get; set; }
     }
 
-    public class Condition
+    public class condition
     {
-        public string Text { get; set; }
-        public string Icon { get; set; }
-        public int Code { get; set; }
+        public string text { get; set; }
+        public string icon { get; set; }
+        public int code { get; set; }
     }
 }

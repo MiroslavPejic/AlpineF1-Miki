@@ -86,11 +86,70 @@
                     </tr>
                 </tbody>
             </table>
+
+            <br/>
+
+            <h3>Select a Tyre</h3>
+            <hr />
+
+            @if (tyres != null && tyres.Any())
+            {
+                <select @bind="selectedTyre">
+                    @foreach (var tyre in tyres)
+                    {
+                        <option value="@tyre.id">@tyre.name</option>
+                    }
+                </select>
+            }
+
+            <br/>
+            <br/>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Degredation coefficient</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tyre in tyreDegradations)
+                    {
+                        <tr id="@tyre.id">
+                            <td>@tyre.type</td>
+                            <td>@tyre.degradationCoefficient</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <button @onclick="OnCalculcateTyreDegradationClicked">Click to calculate tyre degradation</button>
+
         }
         else
         {
             <p>No weather data available.</p>
         }
+    }
+
+    @if (averageDegradation != "" && degradationRange != "")
+    {
+        <hr/>
+        <h3>
+            Results
+        </h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <td>Average Degradation</td>
+                    <td>Degradation Range</td>
+                </tr>
+            </thead>
+            <tbody>
+                <td>@averageDegradation</td>
+                <td>@degradationRange</td>
+            </tbody>
+        </table>
     }
 }
 
@@ -101,15 +160,22 @@
     private IEnumerable<AplineCircuits>? circuits = Array.Empty<AplineCircuits>();
     private AplineCircuitPoints circuitPoints;
     private WeatherData weatherData;
+    private IEnumerable<AlpineTyre>? tyres = Array.Empty<AlpineTyre>();
+    private IEnumerable<AlpineTyreDegradation>? tyreDegradations = Array.Empty<AlpineTyreDegradation>();
+
     private List<string> allCircuitPoints = new List<string>();
     private List<string> displayedCircuitPoints = new List<string>();
     private int pageSize = 10;
     private int totalPages;
     private int currentPage = 1;
     private int selectedCircuit;
+    private int selectedTyre;
     private bool dataLoaded = false;
     private bool weatherDataLoaded = false;
     private bool isLoading = true;
+
+    private string? degradationRange = "";
+    private string? averageDegradation = "";
 
     private async Task initPage()
     {
@@ -214,6 +280,43 @@
         return data;
     }
 
+    private async Task getTyres()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetAllTyres");
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        httpClient.Dispose();
+
+        using (var responseStream = await response.Content.ReadAsStreamAsync())
+        {
+            tyres = JsonSerializer.Deserialize<IEnumerable<AlpineTyre>>(responseStream);
+        }
+
+        Console.WriteLine("Response: " + response);
+        Console.WriteLine("******************************");
+
+    }
+
+    private async Task getTyreDegradationValues()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "api/AplineF1Miki/GetTyreDegradationCoefficient");
+
+        System.Diagnostics.Debug.WriteLine("API response: " + response);
+
+        httpClient.Dispose();
+
+        using (var responseStream = await response.Content.ReadAsStreamAsync())
+        {
+            tyreDegradations = JsonSerializer.Deserialize<IEnumerable<AlpineTyreDegradation>>(responseStream);
+        }
+
+        Console.WriteLine("Response: " + response);
+        Console.WriteLine("******************************");
+    }
+
     private async Task LoadPage(int page)
     {
         if (!dataLoaded)
@@ -244,10 +347,61 @@
         {
             var selectedCircuitInfo = circuits.First(c => c.id == selectedCircuit);
             weatherData = await getWeatherData(selectedCircuitInfo);
+
+            await getTyres();
+            await getTyreDegradationValues();
         }
         else
         {
             // Handle circuit selection error
+        }
+    }
+
+    private async Task OnCalculcateTyreDegradationClicked()
+    {
+        if (selectedTyre != 0 && tyres.Any(c => c.id == selectedTyre))
+        {
+            var selectedTyreInfo = tyres.First(c => c.id == selectedTyre);
+            var tyreDegradationValues = new List<double>();
+
+            // Convert the degradation coefficient to a double
+            if (double.TryParse(selectedTyreInfo.degradationCoefficient, out double degradationCoefficient))
+            {
+                foreach (var circuitPoint in allCircuitPoints)
+                {
+                    // Calculate tyre degradation for each point on the track
+                    var tyreDegradation = CalculateTyreDegradation(
+                        trackDegradationPoint: Convert.ToDouble(circuitPoint),
+                        trackTemperature: weatherData.current.temp_c + 273.15, // Convert temperature to Kelvin
+                        tyreCoefficient: degradationCoefficient * GetTyreCoefficient(selectedTyreInfo.name)
+                    );
+
+                    tyreDegradationValues.Add(tyreDegradation);
+                }
+
+                // Calculate average tyre degradation
+                var averageTyreDegradation = CalculateAverageTyreDegradation(tyreDegradationValues);
+                averageDegradation = averageTyreDegradation.ToString();
+
+                // Calculate range of tyre degradation
+                var tyreDegradationRange = CalculateTyreDegradationRange(tyreDegradationValues);
+                degradationRange = tyreDegradationRange.ToString();
+
+                // Output or use the averageTyreDegradation and tyreDegradationRange as needed
+                // Output average and range to the console
+                System.Diagnostics.Debug.WriteLine($"Average Tyre Degradation: {averageTyreDegradation}");
+                System.Diagnostics.Debug.WriteLine($"Tyre Degradation Range: {tyreDegradationRange}");
+            }
+            else
+            {
+                // Handle case where degradation coefficient is not a valid number
+                System.Diagnostics.Debug.WriteLine("Invalid degradation coefficient.");
+            }
+        }
+        else
+        {
+            // Handle case where selected tyre is not valid
+            System.Diagnostics.Debug.WriteLine("Invalid selected tyre.");
         }
     }
 
@@ -273,6 +427,36 @@
             currentPage += 1;
 
             await LoadPage(currentPage + 1);
+        }
+    }
+
+    private double CalculateTyreDegradation(double trackDegradationPoint, double trackTemperature, double tyreCoefficient)
+    {
+        return (trackDegradationPoint * trackTemperature) / tyreCoefficient;
+    }
+
+    private double CalculateAverageTyreDegradation(IEnumerable<double> tyreDegradations)
+    {
+        return tyreDegradations.Any() ? tyreDegradations.Average() : 0.0;
+    }
+
+    private double CalculateTyreDegradationRange(IEnumerable<double> tyreDegradations)
+    {
+        return tyreDegradations.Any() ? tyreDegradations.Max() - tyreDegradations.Min() : 0.0;
+    }
+
+    private double GetTyreCoefficient(string tyreType)
+    {
+        switch (tyreType)
+        {
+            case "Soft":
+                return 0.8;
+            case "Medium":
+                return 0.9;
+            case "Hard":
+                return 0.75;
+            default:
+                return 1.0; // Default to 100% if tyre type is not recognized
         }
     }
 }

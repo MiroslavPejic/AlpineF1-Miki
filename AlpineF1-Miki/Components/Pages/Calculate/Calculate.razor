@@ -60,15 +60,32 @@
 
     @if (weatherDataLoaded)
     {
+        <hr/>
+
         @if (weatherData != null)
         {
             <h3>Location: @weatherData.location.name, @weatherData.location.region, @weatherData.location.country</h3>
-            <p><strong>Last Updated:</strong> @weatherData.current.last_updated</p>
-            <p><strong>Temperature:</strong> @weatherData.current.temp_c°C</p>
-            <p><strong>Condition:</strong> @weatherData.current.condition.text</p>
-            <p><strong>Wind:</strong> @weatherData.current.wind_kph km/h, @weatherData.current.wind_dir</p>
-            <p><strong>Humidity:</strong> @weatherData.current.humidity%</p>
-            <p><strong>Visibility:</strong> @weatherData.current.vis_km km</p>
+            <p>Last updated: @weatherData.current.last_updated</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td><strong>Last Updated</strong></td>
+                        <td><strong>Condition</strong></td>
+                        <td><strong>Wind:</strong></td>
+                        <td><strong>Humidity:</strong></td>
+                        <td><strong>Visibility:</strong></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@weatherData.current.temp_c°C</td>
+                        <td>@weatherData.current.condition.text</td>
+                        <td>@weatherData.current.wind_kph km/h, @weatherData.current.wind_dir</td>
+                        <td>@weatherData.current.humidity%</td>
+                        <td>@weatherData.current.vis_km km</td>
+                    </tr>
+                </tbody>
+            </table>
         }
         else
         {
@@ -173,12 +190,14 @@
         return circuitPoints;
     }
 
-    private async Task<WeatherData> getWeatherData()
+    private async Task<WeatherData> getWeatherData(AplineCircuits circuit)
     {
         WeatherData data = new WeatherData();
 
+        string weatherApiUrl = $"http://api.weatherapi.com/v1/current.json?key=97ae47bde535426ab75153443241505&q={circuit.track_location},&aqi=no";
+
         HttpClient httpClient = new HttpClient();
-        HttpResponseMessage response = await httpClient.GetAsync("http://api.weatherapi.com/v1/current.json?key=97ae47bde535426ab75153443241505&q=Monaco&aqi=no");
+        HttpResponseMessage response = await httpClient.GetAsync(weatherApiUrl);
 
         if (response.IsSuccessStatusCode)
         {
@@ -221,7 +240,15 @@
 
     private async Task OnLoadWeatherInformationClicked()
     {
-        weatherData = await getWeatherData();
+        if (selectedCircuit != 0 && circuits.Any(c => c.id == selectedCircuit))
+        {
+            var selectedCircuitInfo = circuits.First(c => c.id == selectedCircuit);
+            weatherData = await getWeatherData(selectedCircuitInfo);
+        }
+        else
+        {
+            // Handle circuit selection error
+        }
     }
 
     private void UpdateDisplayedCircuitPoints()

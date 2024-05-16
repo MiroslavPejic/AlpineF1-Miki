@@ -4,14 +4,14 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<PageTitle>Alpine F1 - Circuit tyre degradation claculator</PageTitle>
+<PageTitle>Alpine F1 - Circuit tyre degradation calculator</PageTitle>
 
 <h1>Alpine F1 - Circuit tyre degradation calculator</h1>
 
 <p>Use the following below to work out the tyre degradation values!</p>
 
 <h3>Select a circuit</h3>
-<hr/>
+<hr />
 
 @if (circuits != null && circuits.Any())
 {
@@ -23,9 +23,10 @@
     </select>
 }
 
-<br/>
-<button @onclick="OnCircuitSelectedButtonClick">Get Circuit Points</button>
-<hr/>
+<br />
+<br />
+<button class="button" @onclick="OnCircuitSelectedButtonClick">Get Circuit Points</button>
+<hr />
 
 @if (dataLoaded)
 {
@@ -50,17 +51,17 @@
         </tbody>
     </table>
 
-    <button @onclick="PreviousPage">Previous</button>
-    <button @onclick="NextPage">Next</button>
+    <button class="button" @onclick="PreviousPage">Previous</button>
+    <button class="button" @onclick="NextPage">Next</button>
 
     <hr />
 
     <h3>Weather Information</h3>
-    <button @onclick="OnLoadWeatherInformationClicked">Click to load weather information</button>
+    <button class="button" @onclick="OnLoadWeatherInformationClicked">Click to load weather information</button>
 
     @if (weatherDataLoaded)
     {
-        <hr/>
+        <hr />
 
         @if (weatherData != null)
         {
@@ -87,7 +88,7 @@
                 </tbody>
             </table>
 
-            <br/>
+            <br />
 
             <h3>Select a Tyre</h3>
             <hr />
@@ -102,8 +103,8 @@
                 </select>
             }
 
-            <br/>
-            <br/>
+            <br />
+            <br />
 
             <table class="table">
                 <thead>
@@ -123,33 +124,32 @@
                 </tbody>
             </table>
 
-            <button @onclick="OnCalculcateTyreDegradationClicked">Click to calculate tyre degradation</button>
+            <button class="button" @onclick="OnCalculcateTyreDegradationClicked">Click to calculate tyre degradation</button>
 
+            @if (averageDegradation != "" && degradationRange != "")
+            {
+                <hr />
+                <h3>
+                    Results
+                </h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td>Average Degradation</td>
+                            <td>Degradation Range</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <td>@averageDegradation</td>
+                    <td>@degradationRange</td>
+                    </tbody>
+                </table>
+            }
         }
         else
         {
             <p>No weather data available.</p>
         }
-    }
-
-    @if (averageDegradation != "" && degradationRange != "")
-    {
-        <hr/>
-        <h3>
-            Results
-        </h3>
-        <table class="table">
-            <thead>
-                <tr>
-                    <td>Average Degradation</td>
-                    <td>Degradation Range</td>
-                </tr>
-            </thead>
-            <tbody>
-                <td>@averageDegradation</td>
-                <td>@degradationRange</td>
-            </tbody>
-        </table>
     }
 }
 
